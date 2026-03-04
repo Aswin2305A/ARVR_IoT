@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NPK AR View</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="screen-orientation" content="portrait">
+    <meta name="orientation" content="portrait">
+    <meta charset="utf-8">
+    
+    <!-- Use stable AR.js version -->
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.3.1/aframe/build/aframe-ar.min.js"></script>
+</head>
+<body style="margin: 0; overflow: hidden;">
+    <!-- Status display -->
+    <div id="status" style="position: fixed; top: 20px; left: 20px; background: rgba(0,0,0,0.8); color: white; padding: 15px; border-radius: 8px; z-index: 9999; font-family: Arial, sans-serif; font-size: 14px;">
+        Starting AR...
+    </div>
+    
+    <!-- Back button -->
+    <button onclick="goBack()" style="position: fixed; top: 20px; right: 20px; width: 50px; height: 50px; border-radius: 50%; background: #ef4444; color: white; border: none; font-size: 18px; z-index: 9999;">
+        ←
+    </button>
+    
+    <!-- AR Scene -->
+    <a-scene 
+        embedded 
+        vr-mode-ui="enabled: false"
+        arjs="sourceType: webcam; trackingMethod: best; debugUIEnabled: false;"
+        renderer="antialias: true; precision: high">
+        
+        <!-- Hiro marker -->
+        <a-marker preset="hiro" id="marker">
+            <!-- Rotation applied ONLY to container -->
+            <a-entity rotation="-90 0 0" scale="0.8 0.8 0.8">
+                <!-- FIXED: Properly sized background panel -->
+                <a-plane position="0 0 0" width="2.4" height="1.8" color="#1e3a8a"></a-plane>
+                
+                <!-- FIXED: Title text with correct width -->
+                <a-text 
+                    value="NPK SOIL SENSOR" 
+                    position="0 0.75 0.05" 
+                    align="center" 
+                    color="#ffffff" 
+                    width="2.2"
+                    look-at="[camera]"
+                    font="https://cdn.aframe.io/fonts/Roboto-msdf.json">
+                </a-text>
+                
+                <!-- Section Header -->
+                <a-text 
+                    value="NUTRIENT LEVELS" 
+                    position="0 0.55 0.05" 
+                    align="center" 
+                    color="#fbbf24" 
+                    width="2.0"
+                    look-at="[camera]"
+                    font="https://cdn.aframe.io/fonts/Roboto-msdf.json">
+                </a-text>
+                
+                <!-- FIXED: NPK Values with perfect size -->
+                <a-text 
+                    id="nitrogen-value"
+                    value="N: Loading..." 
+                    position="0 0.35 0.05" 
+                    align="center" 
+                    color="#ffffff" 
+                    width="2.0"
+                    look-at="[camera]"
+                    font="https://cdn.aframe.io/fonts/Roboto-msdf.json">
+                </a-text>
+                
+                <a-text 
+                    id="phosphorus-value"
+                    value="P: Loading..." 
+                    position="0 0.15 0.05" 
+                    align="center" 
+                    color="#ffffff" 
+                    width="2.0"
+                    look-at="[camera]"
+                    font="https://cdn.aframe.io/fonts/Roboto-msdf.json">
+                </a-text>
+                
+                <a-text 
+                    id="potassium-value"
+                    value="K: Loading..." 
+                    position="0 -0.05 0.05" 
+                    align="center" 
+                    color="#ffffff" 
+                    width="2.0"
+                    look-at="[camera]"
+                    font="https://cdn.aframe.io/fonts/Roboto-msdf.json">
+                </a-text>
+                
+                <!-- Crop Section Header -->
+                <a-text 
+                    value="RECOMMENDED CROPS" 
+                    position="0 -0.25 0.05" 
+                    align="center" 
+                    color="#fbbf24" 
+                    width="2.0"
+                    look-at="[camera]"
+                    font="https://cdn.aframe.io/fonts/Roboto-msdf.json">
+                </a-text>
+                
+                <!-- FIXED: Crop recommendations with smaller width -->
+                <a-text 
+                    id="crop-recommendations"
+                    value="Loading crops..." 
+                    position="0 -0.45 0.05" 
+                    align="center" 
+                    color="#10b981" 
+                    width="2.2"
+                    look-at="[camera]"
+                    font="https://cdn.aframe.io/fonts/Roboto-msdf.json">
+                </a-text>
+                
+                <!-- Status -->
+                <a-text 
+                    id="sensor-status"
+                    value="LOADING..." 
+                    position="0 -0.65 0.05" 
+                    align="center" 
+                    color="#fbbf24" 
+                    width="2.0"
+                    look-at="[camera]"
+                    font="https://cdn.aframe.io/fonts/Roboto-msdf.json">
+                </a-text>
+            </a-entity>
+        </a-marker>
+        
+        <a-entity camera></a-entity>
+    </a-scene>
+
+    <script>
+        console.log('AR script starting...');
+        
+        const statusDiv = document.getElementById('status');
+        
+        // NPK display elements
+        const nitrogenEl = document.getElementById('nitrogen-value');
+        const phosphorusEl = document.getElementById('phosphorus-value');
+        const potassiumEl = document.getElementById('potassium-value');
+        const cropsEl = document.getElementById('crop-recommendations');
+        const sensorStatusEl = document.getElementById('sensor-status');
+        
+        let markerVisible = false;
+        
+        // Initialize AR
+        window.addEventListener('load', function() {
+            console.log('Initializing AR...');
+            statusDiv.innerHTML = '📷 Starting camera...<br>📱 Keep phone portrait, marker flat';
+            
+            setTimeout(() => {
+                setupAR();
+            }, 1000);
+        });
+        
+        function setupAR() {
+            const marker = document.getElementById('marker');
+            
+            marker.addEventListener('markerFound', function() {
+                console.log('✅ Marker found!');
+                markerVisible = true;
+                statusDiv.innerHTML = '✅ Marker detected!';
+                
+                setTimeout(() => {
+                    if (markerVisible) {
+                        statusDiv.style.display = 'none';
+                    }
+                }, 2000);
+            });
+            
+            marker.addEventListener('markerLost', function() {
+                console.log('❌ Marker lost');
+                markerVisible = false;
+                statusDiv.style.display = 'block';
+                statusDiv.innerHTML = '🎯 Point at Hiro marker<br>📱 Keep marker flat on table';
+            });
+            
+            statusDiv.innerHTML = '🎯 Point camera at Hiro marker<br>📱 Print marker, place flat on table';
+            
+            // Start data fetching
+            fetchNPKData();
+            setInterval(fetchNPKData, 3000);
+        }
+        
+        function getNPKStatus(nutrient, value) {
+            const thresholds = {
+                'N': { low: 150, high: 255 },
+                'P': { low: 30, high: 80 },
+                'K': { low: 110, high: 200 }
+            };
+            
+            const t = thresholds[nutrient];
+            if (value < t.low) return 'LOW';
+            if (value <= t.high) return 'OPTIMAL';
+            return 'HIGH';
+        }
+        
+        async function fetchNPKData() {
+            try {
+                const response = await fetch('/data');
+                const data = await response.json();
+                
+                if ((data.status === 'live' || data.status === 'recent') && data.npk) {
+                    const npk = data.npk;
+                    
+                    // Get status for each nutrient
+                    const nStatus = getNPKStatus('N', npk.nitrogen);
+                    const pStatus = getNPKStatus('P', npk.phosphorus);
+                    const kStatus = getNPKStatus('K', npk.potassium);
+                    
+                    // Update with clean, readable text
+                    nitrogenEl.setAttribute('value', `N: ${npk.nitrogen} mg/kg (${nStatus})`);
+                    phosphorusEl.setAttribute('value', `P: ${npk.phosphorus} mg/kg (${pStatus})`);
+                    potassiumEl.setAttribute('value', `K: ${npk.potassium} mg/kg (${kStatus})`);
+                    
+                    // Update crop recommendations
+                    if (data.analysis && data.analysis.recommended_crops) {
+                        const topCrops = data.analysis.recommended_crops.slice(0, 2);
+                        const cropText = topCrops.map(crop => crop.crop.toUpperCase()).join(' • ');
+                        cropsEl.setAttribute('value', cropText);
+                    } else {
+                        cropsEl.setAttribute('value', 'NO RECOMMENDATIONS');
+                    }
+                    
+                    // Update status
+                    sensorStatusEl.setAttribute('value', data.status === 'live' ? 'LIVE DATA' : 'RECENT DATA');
+                    
+                } else if (data.status === 'off') {
+                    nitrogenEl.setAttribute('value', 'SENSOR OFF');
+                    phosphorusEl.setAttribute('value', 'SENSOR OFF');
+                    potassiumEl.setAttribute('value', 'SENSOR OFF');
+                    cropsEl.setAttribute('value', 'USE GESTURE CONTROL');
+                    sensorStatusEl.setAttribute('value', 'SENSOR OFFLINE');
+                } else {
+                    nitrogenEl.setAttribute('value', 'NO DATA');
+                    phosphorusEl.setAttribute('value', 'NO DATA');
+                    potassiumEl.setAttribute('value', 'NO DATA');
+                    cropsEl.setAttribute('value', 'CHECK SENSOR');
+                    sensorStatusEl.setAttribute('value', 'NO DATA AVAILABLE');
+                }
+            } catch (error) {
+                console.error('Fetch error:', error);
+                nitrogenEl.setAttribute('value', 'NETWORK ERROR');
+                phosphorusEl.setAttribute('value', 'NETWORK ERROR');
+                potassiumEl.setAttribute('value', 'NETWORK ERROR');
+                cropsEl.setAttribute('value', 'CHECK CONNECTION');
+                sensorStatusEl.setAttribute('value', 'NETWORK ERROR');
+            }
+        }
+        
+        function goBack() {
+            window.history.back();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NPK Soil Analysis System</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      color: #333;
+    }
+    
+    .header {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 20px 0;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+    }
+    
+    .header h1 {
+      text-align: center;
+      color: #1e3a8a;
+      font-size: 2.5em;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    
+    .header p {
+      text-align: center;
+      color: #64748b;
+      font-size: 1.1em;
+    }
+    
+    .container { 
+      max-width: 1200px; 
+      margin: 0 auto; 
+      padding: 0 20px;
+    }
+    
+    .main-actions {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin-bottom: 40px;
+      flex-wrap: wrap;
+    }
+    
+    .action-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 30px;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+      min-width: 280px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .action-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+    }
+    
+    .action-icon {
+      font-size: 3em;
+      margin-bottom: 15px;
+      display: block;
+    }
+    
+    .action-title {
+      font-size: 1.4em;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: #1e3a8a;
+    }
+    
+    .action-desc {
+      color: #64748b;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    
+    .action-btn {
+      display: inline-block;
+      padding: 15px 30px;
+      border-radius: 50px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1.1em;
+      transition: all 0.3s ease;
+      border: none;
+      cursor: pointer;
+    }
+    
+    .btn-ar {
+      background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
+      color: white;
+      box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+    }
+    
+    .btn-ar:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(139, 92, 246, 0.6);
+    }
+    
+    .btn-dashboard {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+    }
+    
+    .btn-dashboard:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
+    }
+    
+    .data-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 30px;
+      margin-bottom: 40px;
+    }
+    
+    .data-card {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .data-card h2 {
+      color: #1e3a8a;
+      margin-bottom: 20px;
+      font-size: 1.3em;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .npk-values {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin: 20px 0;
+    }
+    
+    .npk-item {
+      background: #f8fafc;
+      padding: 15px;
+      border-radius: 10px;
+      text-align: center;
+      border: 2px solid #e2e8f0;
+    }
+    
+    .npk-label {
+      font-size: 0.9em;
+      color: #64748b;
+      margin-bottom: 5px;
+    }
+    
+    .npk-value {
+      font-size: 1.5em;
+      font-weight: 700;
+      color: #1e3a8a;
+    }
+    
+    .status-indicator {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.8em;
+      font-weight: 600;
+      margin-top: 5px;
+    }
+    
+    .status-live { background: #dcfce7; color: #166534; }
+    .status-recent { background: #fef3c7; color: #92400e; }
+    .status-error { background: #fee2e2; color: #dc2626; }
+    
+    .video-container {
+      position: relative;
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    }
+    
+    #video { 
+      width: 100%; 
+      height: auto;
+      display: block;
+      background-color: #000; 
+    }
+    
+    .crop-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+    
+    .crop-card { 
+      background: #f8fafc;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px; 
+      padding: 15px; 
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+    
+    .crop-card:hover {
+      border-color: #3b82f6;
+      transform: translateY(-2px);
+    }
+    
+    .crop-card h4 { 
+      margin: 0 0 8px 0; 
+      color: #1e3a8a;
+      font-size: 1em;
+    }
+    
+    .crop-card p { 
+      margin: 0; 
+      font-size: 0.85em; 
+      color: #64748b; 
+    }
+    
+    .best-match { 
+      background: #dcfce7;
+      border-color: #16a34a !important;
+    }
+    
+    .best-match h4 {
+      color: #166534;
+    }
+    
+    @media (max-width: 768px) {
+      .main-actions {
+        flex-direction: column;
+        align-items: center;
+      }
+      
+      .action-card {
+        min-width: 100%;
+        max-width: 400px;
+      }
+      
+      .header h1 {
+        font-size: 2em;
+      }
+      
+      .npk-values {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="container">
+      <h1>🌱 NPK Soil Analysis System</h1>
+      <p>Advanced soil nutrient monitoring with AR visualization</p>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- Main Action Cards -->
+    <div class="main-actions">
+      <div class="action-card">
+        <span class="action-icon">🥽</span>
+        <div class="action-title">AR View</div>
+        <div class="action-desc">Experience real-time soil analysis in augmented reality</div>
+        <a href="/ar" target="_blank" class="action-btn btn-ar">Launch AR View</a>
+      </div>
+      
+      <div class="action-card">
+        <span class="action-icon">📊</span>
+        <div class="action-title">Dashboard</div>
+        <div class="action-desc">View detailed analytics and historical data</div>
+        <a href="/dashboard" target="_blank" class="action-btn btn-dashboard">View Dashboard</a>
+      </div>
+    </div>
+
+    <!-- Data Grid -->
+    <div class="data-grid">
+      <!-- NPK Values Card -->
+      <div class="data-card">
+        <h2>🧪 Current NPK Values</h2>
+        <div class="npk-values">
+          <div class="npk-item">
+            <div class="npk-label">Nitrogen (N)</div>
+            <div class="npk-value" id="nitrogen-value">--</div>
+            <div class="status-indicator" id="nitrogen-status">Loading</div>
+          </div>
+          <div class="npk-item">
+            <div class="npk-label">Phosphorus (P)</div>
+            <div class="npk-value" id="phosphorus-value">--</div>
+            <div class="status-indicator" id="phosphorus-status">Loading</div>
+          </div>
+          <div class="npk-item">
+            <div class="npk-label">Potassium (K)</div>
+            <div class="npk-value" id="potassium-value">--</div>
+            <div class="status-indicator" id="potassium-status">Loading</div>
+          </div>
+        </div>
+        <div id="data-source-info" style="text-align: center; color: #64748b; font-size: 0.9em; margin-top: 15px;">
+          Connecting to sensor...
+        </div>
+      </div>
+
+      <!-- Camera Feed Card -->
+      <div class="data-card">
+        <h2>📷 Live Gesture Control</h2>
+        <div class="video-container">
+          <img id="video" src="{{ url_for('video_feed') }}" alt="Video Stream">
+        </div>
+        <div style="margin-top: 15px; text-align: center; color: #64748b; font-size: 0.9em;">
+          <strong>Hand Gesture Control:</strong> Move your finger into the ON/OFF boxes on the video to control the sensor
+        </div>
+      </div>
+    </div>
+
+    <!-- Soil Analysis Card -->
+    <div id="analysis-container" class="data-card" style="display: none;">
+      <h2>🌾 Soil Analysis & Recommendations</h2>
+      <div id="soil-quality" style="font-size: 1.2em; margin-bottom: 20px; text-align: center;"></div>
+      <div class="crop-grid" id="crop-recommendations"></div>
+    </div>
+  </div>
+
+  <script>
+    function getNPKStatus(nutrient, value) {
+      const thresholds = {
+        'N': { low: 150, high: 255 },
+        'P': { low: 30, high: 80 },
+        'K': { low: 110, high: 200 }
+      };
+      
+      const t = thresholds[nutrient];
+      if (value < t.low) return 'LOW';
+      if (value <= t.high) return 'OPTIMAL';
+      return 'HIGH';
+    }
+
+    async function fetchData() {
+      try {
+        const response = await fetch("/data");
+        const data = await response.json();
+
+        if ((data.status === "live" || data.status === "recent") && data.npk && data.analysis) {
+          const npk = data.npk;
+          const analysis = data.analysis;
+
+          // Update individual NPK values
+          document.getElementById("nitrogen-value").textContent = npk.nitrogen;
+          document.getElementById("phosphorus-value").textContent = npk.phosphorus;
+          document.getElementById("potassium-value").textContent = npk.potassium;
+
+          // Update status indicators
+          const nStatus = getNPKStatus('N', npk.nitrogen);
+          const pStatus = getNPKStatus('P', npk.phosphorus);
+          const kStatus = getNPKStatus('K', npk.potassium);
+
+          updateStatusIndicator('nitrogen-status', nStatus);
+          updateStatusIndicator('phosphorus-status', pStatus);
+          updateStatusIndicator('potassium-status', kStatus);
+
+          // Update data source info
+          const sourceInfo = document.getElementById("data-source-info");
+          if (data.status === "live") {
+            sourceInfo.innerHTML = "🟢 Live sensor data • Last updated: " + new Date().toLocaleTimeString();
+            sourceInfo.className = "status-live";
+          } else if (data.status === "recent") {
+            const timestamp = data.timestamp ? new Date(data.timestamp).toLocaleString() : 'Unknown';
+            sourceInfo.innerHTML = "🟡 Recent data (sensor offline) • From: " + timestamp;
+            sourceInfo.className = "status-recent";
+          }
+          
+          // Show analysis container
+          document.getElementById("analysis-container").style.display = "block";
+          
+          // Display soil quality
+          const qualityElement = document.getElementById("soil-quality");
+          qualityElement.textContent = `Soil Quality: ${analysis.soil_quality}`;
+          
+          // Set color based on quality
+          switch(analysis.soil_quality) {
+            case "Excellent": qualityElement.style.color = "#166534"; break;
+            case "Good": qualityElement.style.color = "#16a34a"; break;
+            case "Average": qualityElement.style.color = "#ca8a04"; break;
+            case "Poor": qualityElement.style.color = "#dc2626"; break;
+          }
+          
+          // Display recommended crops
+          const cropContainer = document.getElementById("crop-recommendations");
+          cropContainer.innerHTML = '';
+          
+          analysis.recommended_crops.forEach((cropData) => {
+            const isTopCrop = cropData.crop === analysis.top_crop;
+            const cropCard = document.createElement('div');
+            cropCard.className = `crop-card ${isTopCrop ? 'best-match' : ''}`;
+            cropCard.innerHTML = `
+              <h4>${cropData.crop}</h4>
+              <p>Confidence: ${cropData.confidence}</p>
+              ${isTopCrop ? '<p style="color: #166534; font-weight: 600; margin-top: 5px;">✓ Best Match</p>' : ''}
+            `;
+            cropContainer.appendChild(cropCard);
+          });
+
+        } else {
+          // Handle error states
+          document.getElementById("nitrogen-value").textContent = "--";
+          document.getElementById("phosphorus-value").textContent = "--";
+          document.getElementById("potassium-value").textContent = "--";
+          
+          updateStatusIndicator('nitrogen-status', 'ERROR');
+          updateStatusIndicator('phosphorus-status', 'ERROR');
+          updateStatusIndicator('potassium-status', 'ERROR');
+
+          const sourceInfo = document.getElementById("data-source-info");
+          if (data.status === "no_data") {
+            sourceInfo.innerHTML = "❌ No data available • Check sensor setup";
+          } else {
+            sourceInfo.innerHTML = "⚠️ Sensor offline • Check Arduino connection";
+          }
+          sourceInfo.className = "status-error";
+          
+          document.getElementById("analysis-container").style.display = "none";
+        }
+      } catch (err) {
+        console.error("Error fetching data:", err);
+        
+        document.getElementById("nitrogen-value").textContent = "--";
+        document.getElementById("phosphorus-value").textContent = "--";
+        document.getElementById("potassium-value").textContent = "--";
+        
+        updateStatusIndicator('nitrogen-status', 'ERROR');
+        updateStatusIndicator('phosphorus-status', 'ERROR');
+        updateStatusIndicator('potassium-status', 'ERROR');
+
+        document.getElementById("data-source-info").innerHTML = "🌐 Network error • Cannot reach server";
+        document.getElementById("data-source-info").className = "status-error";
+        document.getElementById("analysis-container").style.display = "none";
+      }
+    }
+
+    function updateStatusIndicator(elementId, status) {
+      const element = document.getElementById(elementId);
+      element.textContent = status;
+      
+      // Remove existing status classes
+      element.classList.remove('status-live', 'status-recent', 'status-error');
+      
+      // Add appropriate class
+      switch(status) {
+        case 'OPTIMAL':
+          element.classList.add('status-live');
+          break;
+        case 'LOW':
+        case 'HIGH':
+          element.classList.add('status-recent');
+          break;
+        case 'ERROR':
+          element.classList.add('status-error');
+          break;
+      }
+    }
+
+    setInterval(fetchData, 3000);
+    fetchData();
+  </script>
+</body>
+</html>
+
